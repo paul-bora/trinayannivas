@@ -18,7 +18,7 @@ export default function BuySell() {
     must<Listing[]>(
       await supabase
         .from('listings')
-        .select('*, seller:profiles(name, unit:units(number))')
+        .select('*, seller:profiles!listings_seller_id_fkey(name, unit:units!profiles_unit_id_fkey(number))')
         .order('created_at', { ascending: false }),
     ),
   )
