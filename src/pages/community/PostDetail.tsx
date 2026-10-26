@@ -21,7 +21,7 @@ export default function PostDetail() {
       supabase.from('posts').select(POST_SELECT).eq('id', id!).single().then(must),
       supabase
         .from('post_comments')
-        .select('id, author_id, body, created_at, author:profiles(name, unit:units(number))')
+        .select('id, author_id, body, created_at, author:profiles!post_comments_author_id_fkey(name, unit:units!profiles_unit_id_fkey(number))')
         .eq('post_id', id!)
         .order('created_at')
         .then(must),
