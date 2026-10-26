@@ -18,7 +18,7 @@ export default function Maintenance() {
   const [busy, setBusy] = useState(false)
   const state = useLoad(async () => {
     const [dues, settings] = await Promise.all([
-      supabase.from('dues').select('*, unit:units(number)').eq('month', month).then(must),
+      supabase.from('dues').select('*, unit:units!dues_unit_id_fkey(number)').eq('month', month).then(must),
       loadSettings(),
     ])
     const rows = (dues as DueRow[]).sort((a, b) => (a.unit?.number ?? '').localeCompare(b.unit?.number ?? '', 'en', { numeric: true }))
@@ -44,7 +44,7 @@ export default function Maintenance() {
 
   async function exportAll() {
     try {
-      const rows = must(await supabase.from('dues').select('*, unit:units(number)').order('month')) as DueRow[]
+      const rows = must(await supabase.from('dues').select('*, unit:units!dues_unit_id_fkey(number)').order('month')) as DueRow[]
       downloadCsv(
         'maintenance-dues.csv',
         rows.map((d) => ({
