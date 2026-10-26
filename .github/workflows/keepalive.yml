@@ -1,4 +1,5 @@
 # Free Supabase projects pause after 7 days without activity. This pings the database every 3 days.
+# Needs supabase/migrations/0003_keepalive_ping.sql to have been run once.
 name: Keep Supabase awake
 
 on:
@@ -13,8 +14,9 @@ jobs:
       - name: Ping Supabase
         run: |
           curl --fail --silent --show-error \
-            "${{ secrets.SUPABASE_URL }}/rest/v1/rpc/is_admin" \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/rpc/ping" \
             -X POST \
             -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
             -H "Content-Type: application/json" \
-            -d '{}' -o /dev/null -w "HTTP %{http_code}\n" || true
+            -d '{}' -w "\nHTTP %{http_code}\n"
