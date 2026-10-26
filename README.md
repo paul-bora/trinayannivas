@@ -66,6 +66,8 @@ npm run dev               # open the address it prints
 
 From now on, every push to GitHub updates the app automatically in about a minute.
 
+> **If you created a Worker instead of a Pages project:** Cloudflare's **Create** button defaults to Workers. The repo includes [wrangler.jsonc](wrangler.jsonc), so that works too. Use build command `npm run build` and deploy command `npx wrangler deploy`, and add the two `VITE_` variables under **Settings → Build → Variables**. The address will be `https://trinayannivas.<your-account>.workers.dev` instead of `.pages.dev`.
+
 ### 5. Automatic backups and keep-alive (GitHub Actions)
 A free Supabase project pauses after 7 days of no use. In the GitHub repo, go to **Settings → Secrets and variables → Actions** and add:
 - `SUPABASE_URL` and `SUPABASE_ANON_KEY`, for the keep-alive ping every 3 days
@@ -98,4 +100,3 @@ Then the **Monthly database backup** workflow saves a full copy of the data on t
 - Stack: React 18 + TypeScript + Vite + `vite-plugin-pwa`, `@supabase/supabase-js`, plain CSS (`src/styles.css`).
 - All access rules are enforced in the database with row-level security ([supabase/migrations/0001_init.sql](supabase/migrations/0001_init.sql)). The app hides admin screens, but the database is what actually protects the data.
 - Login is allowed only for emails in `allowed_emails` (a trigger on `auth.users`). Removing an email there deletes that person's login.
-
