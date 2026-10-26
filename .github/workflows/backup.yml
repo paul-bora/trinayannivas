@@ -1,0 +1,27 @@
+# Monthly backup of all society data. Download it from the Actions tab → latest run → Artifacts.
+# Needs the SUPABASE_DB_URL secret (Supabase → Connect → Session pooler connection string, with your DB password).
+name: Monthly database backup
+
+on:
+  schedule:
+    - cron: '0 2 1 * *'
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install PostgreSQL 17 client
+        run: |
+          sudo apt-get install -y postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y postgresql-client-17
+      - name: Dump database
+        run: /usr/lib/postgresql/17/bin/pg_dump "$DB_URL" --schema=public --no-owner --no-privileges -f backup.sql
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: trinayan-nivas-backup-${{ github.run_number }}
+          path: backup.sql
+          retention-days: 90
