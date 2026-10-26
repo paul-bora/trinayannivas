@@ -2,8 +2,11 @@ import { deletePhoto } from './files'
 import { must, supabase } from './supabase'
 import type { Post } from './types'
 
-export const POST_SELECT =
-  'id, author_id, body, image_path, created_at, author:profiles(name, unit:units(number)), post_likes(count), post_comments(count)'
+// Embeds name the foreign key (table!constraint) because posts and profiles are also
+// linked through likes/comments/reports, which makes a plain "profiles(...)" ambiguous.
+const AUTHOR = 'profiles!posts_author_id_fkey(name, unit:units!profiles_unit_id_fkey(number))'
+
+export const POST_SELECT = `id, author_id, body, image_path, created_at, author:${AUTHOR}, post_likes(count), post_comments(count)`
 
 export async function likedPostIds(userId: string): Promise<Set<string>> {
   const rows = must(await supabase.from('post_likes').select('post_id').eq('user_id', userId))
