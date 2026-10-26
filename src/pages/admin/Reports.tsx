@@ -17,7 +17,9 @@ export default function Reports() {
     must(
       await supabase
         .from('post_reports')
-        .select('id, reason, created_at, reporter:profiles(name), post:posts(id, body, image_path, author:profiles(name))')
+        .select(
+          'id, reason, created_at, reporter:profiles!post_reports_reporter_id_fkey(name), post:posts!post_reports_post_id_fkey(id, body, image_path, author:profiles!posts_author_id_fkey(name))',
+        )
         .order('created_at', { ascending: false }),
     ) as unknown as Report[],
   )
