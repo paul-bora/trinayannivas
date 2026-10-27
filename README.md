@@ -10,7 +10,7 @@ A simple resident app for Trinayan Nivas. It is a web app that residents install
 | **My Unit** | Flat details, house members, vehicles, **My Dues** (pay by UPI) |
 | **Admin** (committee only) | Accounts dashboard, maintenance dues, expenses, flats & members, settings, reported posts |
 
-**Free services used:** Supabase (database, login and file storage), Brevo (sends login emails), Cloudflare Pages (hosts the app at `trinayannivas.pages.dev`), GitHub (stores the code and runs backups).
+**Free services used:** Supabase (database, login and file storage), Brevo (sends login emails), Cloudflare Workers (hosts the app on a free `workers.dev` address), GitHub (stores the code and runs backups).
 
 ---
 
@@ -19,8 +19,11 @@ A simple resident app for Trinayan Nivas. It is a web app that residents install
 ### 1. Supabase: database and login
 1. Sign up at <https://supabase.com> (free, no card) → **New project**. Name it `trinayan-nivas`, choose region **Mumbai**, and save the database password somewhere safe.
 2. Open **SQL Editor** → paste all of [supabase/migrations/0001_init.sql](supabase/migrations/0001_init.sql) → **Run**.
+   If you ran an earlier copy of that file, also run [0002_grant_table_access.sql](supabase/migrations/0002_grant_table_access.sql), [0003_keepalive_ping.sql](supabase/migrations/0003_keepalive_ping.sql) and [0004_neighbours_all_members.sql](supabase/migrations/0004_neighbours_all_members.sql). All are safe to run more than once.
 3. Open [supabase/seed.sql](supabase/seed.sql). **Change `secretary@example.com` to your own email** and the name, paste it into the SQL Editor → **Run**. You are now the first admin.
-4. **Project Settings → API**: copy the **Project URL** and the **anon public** key. You need them in steps 3 and 4.
+4. Copy two values; you need them in steps 3 and 4:
+   - **Project URL**: **Project Settings → Data API**. It looks like `https://<project-id>.supabase.co`. The project ID alone isn't enough.
+   - **anon public key**: **Project Settings → API Keys → Legacy API keys** (a long string starting with `eyJ`). Never use the `service_role` or secret key in the app.
 
 ### 2. Login emails: connect Brevo, then set the code template
 Supabase only lets you edit email templates after you connect your own email sender (custom SMTP). Its built-in sender also allows only a few emails per hour. Brevo is a free sender that allows 300 emails a day.
@@ -55,21 +58,22 @@ npm install
 npm run dev               # open the address it prints
 ```
 
-### 4. Put it online with Cloudflare Pages
+### 4. Put it online with Cloudflare
 1. Create a free **private** GitHub repository and push this folder to it.
-2. Sign up at <https://pages.cloudflare.com> (free, no card) → **Workers & Pages → Create → Pages → Connect to Git** → pick the repo.
-3. **Project name:** type `trinayannivas`. This becomes the app's free web address, **`https://trinayannivas.pages.dev`**, and **can't be changed later**, so check the spelling. If the name is taken, Cloudflare adds a random ending; try `trinayan-nivas` instead.
-4. Build settings: framework **None**, build command `npm run build`, output folder `dist`.
-   Environment variables: `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (the values from step 1.4), plus `NODE_VERSION` = `20`.
-5. **Save and Deploy**. The app is live at `https://trinayannivas.pages.dev`, free with no renewals and HTTPS included.
-6. Supabase → **Authentication → URL Configuration** → set **Site URL** to `https://trinayannivas.pages.dev`.
+2. Sign up at <https://dash.cloudflare.com> (free, no card) → **Workers & Pages → Create → Import a repository** → pick the repo.
+3. Settings:
+   - **Project name:** `trinayannivas`
+   - **Build command:** `npm run build`
+   - **Deploy command:** `npx wrangler deploy` (it reads [wrangler.jsonc](wrangler.jsonc), which serves the built app)
+4. **Advanced settings → Build variables:** add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (the values from step 1.4), plus `NODE_VERSION` = `20`. They must be *build* variables, because the app reads them while it is being built. For an existing Worker, they are under **Settings → Build**.
+5. **Deploy**. The app is live at `https://trinayannivas.<your-subdomain>.workers.dev`, free with no renewals and HTTPS included.
+   To choose a tidier address, go to **Workers & Pages → Overview → Subdomain → Change**. For example, set it to `tnhs` to get `https://trinayannivas.tnhs.workers.dev`.
+6. Supabase → **Authentication → URL Configuration** → set **Site URL** to that address.
 
 From now on, every push to GitHub updates the app automatically in about a minute.
 
-> **If you created a Worker instead of a Pages project:** Cloudflare's **Create** button defaults to Workers. The repo includes [wrangler.jsonc](wrangler.jsonc), so that works too. Use build command `npm run build` and deploy command `npx wrangler deploy`, and add the two `VITE_` variables under **Settings → Build → Variables**. The address will be `https://trinayannivas.<your-account>.workers.dev` instead of `.pages.dev`.
-
 ### 5. Automatic backups and keep-alive (GitHub Actions)
-A free Supabase project pauses after 7 days of no use. In the GitHub repo, go to **Settings → Secrets and variables → Actions** and add:
+A free Supabase project pauses after 7 days of no use. In the GitHub repo, go to **Settings → Secrets and variables → Actions → Secrets tab → New repository secret**. Add these as **secrets**, not variables, because the workflows only read secrets:
 - `SUPABASE_URL` and `SUPABASE_ANON_KEY`, for the keep-alive ping every 3 days
 - `SUPABASE_DB_URL`, for the monthly backup: Supabase → **Connect** → *Session pooler* connection string, with your database password filled in
 
@@ -87,7 +91,7 @@ Then the **Monthly database backup** workflow saves a full copy of the data on t
 
 ### Message to share in the WhatsApp group
 > 🏠 **Trinayan Nivas now has its own app!**
-> Open: https://trinayannivas.pages.dev
+> Open: https://YOUR-APP-ADDRESS (from step 4)
 > Log in with your email; you'll get a 6-digit code.
 > **Android:** tap ⋮ → *Install app* / *Add to Home screen*
 > **iPhone:** open the link in **Safari** → Share ⬆️ → *Add to Home Screen*

@@ -10,13 +10,16 @@ interface Neighbour {
   phone: string | null
   unit_number: string | null
   block: string | null
+  joined: boolean
 }
+
+// Natural flat order (A-2 before A-10); members without a flat go last.
+const byFlat = (a: Neighbour, b: Neighbour) =>
+  (a.unit_number ?? '￿').localeCompare(b.unit_number ?? '￿', 'en', { numeric: true }) || a.name.localeCompare(b.name)
 
 export default function Neighbours() {
   const [query, setQuery] = useState('')
-  const state = useLoad(async () =>
-    must<Neighbour[]>(await supabase.from('neighbours').select('*').order('unit_number', { nullsFirst: false })),
-  )
+  const state = useLoad(async () => must<Neighbour[]>(await supabase.from('neighbours').select('*')).sort(byFlat))
 
   const q = query.trim().toLowerCase()
   const matches = (n: Neighbour) => !q || n.name.toLowerCase().includes(q) || (n.unit_number ?? '').toLowerCase().includes(q)
@@ -42,7 +45,9 @@ export default function Neighbours() {
                 <ContactRow
                   key={n.id}
                   title={n.name}
-                  subtitle={[n.unit_number, n.block && `Block ${n.block}`].filter(Boolean).join(' · ')}
+                  subtitle={[n.unit_number, n.block && `Block ${n.block}`, !n.joined && 'Not on the app yet']
+                    .filter(Boolean)
+                    .join(' · ')}
                   phone={n.phone}
                 />
               ))}

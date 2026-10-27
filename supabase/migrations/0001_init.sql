@@ -277,14 +277,25 @@ begin
     'pending_units', (select count(distinct unit_id) from dues where status = 'due'));
 end $$;
 
--- Neighbour list with phone numbers hidden for residents who asked for it.
+-- Neighbour list: every registered member (whether or not they've logged in yet), plus
+-- flats with nobody registered. Phone numbers are hidden for residents who asked for it.
 create view public.neighbours as
-  select p.id, p.name,
-         case when p.hide_phone and p.id <> auth.uid() and not public.is_admin() then null else p.phone end as phone,
-         u.number as unit_number, u.block
-  from profiles p
-  left join units u on u.id = p.unit_id
-  where auth.uid() is not null;
+  select concat('m-', u.id, '-', a.name) as id,
+         coalesce(p.name, a.name) as name,
+         case when p.id is null then null
+              when p.hide_phone and p.id <> auth.uid() and not public.is_admin() then null
+              else p.phone end as phone,
+         u.number as unit_number, u.block,
+         p.id is not null as joined
+  from allowed_emails a
+  left join profiles p on p.email = a.email
+  left join units u on u.id = a.unit_id
+  where auth.uid() is not null
+  union all
+  select concat('u-', u.id), coalesce(u.owner_name, 'No resident added'), null, u.number, u.block, false
+  from units u
+  where auth.uid() is not null
+    and not exists (select 1 from allowed_emails a where a.unit_id = u.id);
 
 -- ───────────────────────── Row-level security ─────────────────────────
 
@@ -304,10 +315,13 @@ alter table public.dues enable row level security;
 alter table public.expenses enable row level security;
 alter table public.settings enable row level security;
 
--- Nothing is readable without logging in.
+-- Nothing is readable without logging in. Logged-in users get table access, which the
+-- row-level security policies above then narrow down. (Newer Supabase projects don't
+-- grant this automatically.)
 revoke all on all tables in schema public from anon;
-revoke all on public.neighbours from anon;
-grant select on public.neighbours to authenticated;
+grant usage on schema public to authenticated;
+grant select, insert, update, delete on all tables in schema public to authenticated;
+revoke insert, update, delete on public.neighbours from authenticated;
 
 -- Residents may see each other's name and flat, but not email/phone (phones come via the neighbours view).
 revoke select, insert, update, delete on public.profiles from authenticated;
@@ -379,6 +393,10 @@ revoke execute on all functions in schema public from anon, public;
 grant execute on all functions in schema public to authenticated;
 -- The sign-up trigger runs on behalf of the auth service.
 grant execute on function public.handle_new_user() to supabase_auth_admin;
+
+-- Called by the GitHub keep-alive workflow so the free project doesn't pause. Reads no data.
+create function public.ping() returns boolean language sql stable as $$ select true $$;
+grant execute on function public.ping() to anon, authenticated;
 
 -- ───────────────────────── File storage ─────────────────────────
 -- media: post/listing photos and the UPI QR (public links, random names)
