@@ -203,8 +203,9 @@ section > .section-head:first-child {
   gap: 8px;
 }
 .row.gap > .field {
-  flex: 1;
+  flex: 1 1 0;
   min-width: 120px;
+  align-self: flex-start;
 }
 
 .muted {
@@ -446,6 +447,20 @@ input[type='checkbox'] {
   height: 20px;
   min-height: 0;
   accent-color: var(--brand);
+}
+/* Same height for every single-line control so side-by-side fields line up
+   (date pickers and selects otherwise render taller, especially on iOS). */
+input:not([type='checkbox']),
+select {
+  height: 46px;
+}
+input[type='date'] {
+  -webkit-appearance: none;
+  appearance: none;
+  text-align: left;
+}
+input[type='date']::-webkit-date-and-time-value {
+  text-align: left;
 }
 input[type='file'] {
   padding: 8px;
