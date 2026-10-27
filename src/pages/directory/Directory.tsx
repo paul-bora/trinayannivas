@@ -10,6 +10,7 @@ export default function Directory() {
         <MenuRow to="/directory/emergency" icon="phone" title="Emergency contacts" subtitle="Police, fire, ambulance, security" />
         <MenuRow to="/directory/vendor" icon="directory" title="Vendors" subtitle="Plumber, electrician and more" />
         <MenuRow to="/directory/committee" icon="admin" title="Management Committee" subtitle="Office bearers" />
+        <MenuRow to="/directory/payment" icon="rupee" title="Payment & group" subtitle="Society UPI ID, QR code, WhatsApp group" />
       </section>
     </>
   )

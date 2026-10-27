@@ -15,6 +15,7 @@ import Directory from './pages/directory/Directory'
 import Neighbours from './pages/directory/Neighbours'
 import Documents from './pages/directory/Documents'
 import Contacts from './pages/directory/Contacts'
+import Payment from './pages/directory/Payment'
 import MyUnit from './pages/myunit/MyUnit'
 import MyDues from './pages/myunit/MyDues'
 import MyProfile from './pages/myunit/MyProfile'
@@ -67,6 +68,7 @@ export default function App() {
         <Route path="directory" element={<Directory />} />
         <Route path="directory/neighbours" element={<Neighbours />} />
         <Route path="directory/documents" element={<Documents />} />
+        <Route path="directory/payment" element={<Payment />} />
         <Route path="directory/:type" element={<Contacts />} />
         <Route path="my-unit" element={<MyUnit />} />
         <Route path="my-unit/dues" element={<MyDues />} />
